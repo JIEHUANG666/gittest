@@ -1,4 +1,4 @@
-package com.bawei.userdraw.mr;
+package com.bawei.userdraw.mr2;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -8,11 +8,12 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-public class UserDrawStepOneMapReduce {                     // LongWritable键 是行首的偏移量
-    public static class UserDrawStepOneMapper extends Mapper<LongWritable, Text,Text,LongWritable> {
+public class UserDrawStepOneMapReduce {
 
-        private Text k;
-        private LongWritable v;
+    public static class UserDrawStepOneMapper extends Mapper<LongWritable, Text,Text,LongWritable>{
+
+            private Text k;
+            private  LongWritable v;
 
         @Override
         protected void setup(Context context) throws IOException, InterruptedException {
@@ -22,30 +23,33 @@ public class UserDrawStepOneMapReduce {                     // LongWritable键 �
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+
             String[] arr = value.toString().split("[|]");
-            try {
+            try{
                 String mdn = arr[0];
-                Integer appId = Integer.valueOf(arr[15]);
+                Integer appId = Integer.valueOf(arr[5]);
                 Long ProcedureTime = Long.valueOf(arr[12]);
                 k.set(mdn+"|"+appId);
                 v.set(ProcedureTime);
                 context.write(k,v);
-            } catch (Exception e) {
+            }catch (Exception e){
 
             }
 
         }
     }
 
-    public static class UserDrawStepOneReducer extends Reducer<Text,LongWritable,Text, NullWritable> {
+    public static class UserDrawStepOneReducer extends Reducer<Text,LongWritable,Text, NullWritable>{
+
         @Override
         protected void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
             long sumTime = 0L;
             String mdnAppId = key.toString();
-            for(LongWritable value : values) {
-                sumTime = sumTime + value.get();
+            for (LongWritable value:values) {
+                sumTime = sumTime+value.get();
             }
             context.write(new Text(mdnAppId+"|"+sumTime),NullWritable.get());
         }
     }
+
 }

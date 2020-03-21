@@ -1,4 +1,4 @@
-package com.bawei.userdraw.mr;
+package com.bawei.userdraw.mr2;
 
 import com.bawei.userdraw.bean.UserDraw;
 import org.apache.commons.lang.StringUtils;
@@ -17,75 +17,69 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
-public class UserDrawStepTwoMapReduce {
+public class UserDrawStepTwoMapperReduce {
+//                                                 LongWritable  只要读文本文件就不可避免的用到行首偏移量
+    public static class UserDrawStepTwoMapper extends Mapper<LongWritable, Text,Text,Text>{
 
-    public static class UserDrawStepTwoMapper extends Mapper<LongWritable, Text, Text, Text> {
-
-        private Text k;
-        private Text v;
-
-        @Override
-        protected void setup(Context context) throws IOException, InterruptedException {
-            k = new Text();
-            v = new Text();
-        }
-
-        @Override
-        protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            String[] arr = value.toString().split("[|]");
-            if(arr.length == 3) {
-                String mdn = arr[0];
-                String appId = arr[1];
-                String procedureTime = arr[2];
-                k.set(mdn);
-                v.set(appId+"|"+procedureTime);
-                context.write(k,v);
-            }
-        }
+    private  Text k;
+    private  Text v;
+    @Override
+    protected void setup(Context context) throws IOException, InterruptedException {
+        k = new Text();
+        v = new Text();
     }
 
+    @Override
+    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
-    public static class UserDrawStepTwoReducer extends Reducer<Text,Text,Text, NullWritable> {
+        String[] arr = value.toString().split("[|]]");
+        if(arr.length == 3){
+            String mdn = arr[0];
+            String appId = arr[1];
+            String procedureTime = arr[2];
 
+            k.set(mdn);
+            v.set(appId+"|"+procedureTime);
+            context.write(k,v);
+        }
+
+    }
+}
+    public  static class UserDrawStepTwoReducer extends Reducer<Text,Text,Text, NullWritable>{
 
         private Map<String,String> appTagMap;
-
         @Override
         protected void setup(Context context) throws IOException, InterruptedException {
-            Configuration conf = context.getConfiguration();  //可以操控hdfs文件和本地文件
+            Configuration conf = context.getConfiguration();
             FileSystem fs = FileSystem.get(URI.create("file:///"), conf);
-            FSDataInputStream in = fs.open(new Path("file:///C:\\yarnData\\userDraw\\appData\\appTab.txt"));
+            FSDataInputStream in = fs.open(new Path("file:///E:\\IdeaProjectsU\\userdrawfor1704e\\docs\\appTab.txt"));
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            appTagMap = new HashMap<String,String>();
             String line = null;
-            appTagMap = new HashMap<String, String>();
-            while ((line = br.readLine()) != null) {
+            while((line = br.readLine()) != null){
                 String[] arr = line.split("[|]");
                 String appId = arr[0];
                 String value = arr[0] + "," + arr[1] + "," + arr[2] + "," + arr[3] + "," + arr[4] + "," + arr[5] + "," + arr[6] + "," + arr[7] + "," + arr[8];
                 appTagMap.put(arr[0],value);
             }
+
         }
 
         @Override
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             String mdn = key.toString();
-            if(!StringUtils.isEmpty(mdn)) {
+            if(!StringUtils.isEmpty(mdn)){
                 UserDraw userDraw = new UserDraw();
-                //设置用户画像的mdn  唯一标识
                 userDraw.setMdn(mdn);
-                //初始化性别和年龄  第一次还没有用户画像
                 userDraw.initSex();
                 userDraw.initAge();
-                Iterator<Text> iterator = values.iterator();
-                for(Text value : values) {  //这个value是appId+"|"+procedureTime
+                for (Text value:values) {
                     String[] arr = value.toString().split("[|]");
                     String appId = arr[0];
-
                     String appTagMsg = appTagMap.get(appId);
-                    if(!StringUtils.isEmpty(appTagMsg)) {
+                    if(!StringUtils.isEmpty(appTagMsg)){
                         String[] split = appTagMsg.split(",");
                         Double male = Double.valueOf(split[2]);
                         Double female = Double.valueOf(split[3]);
@@ -99,10 +93,9 @@ public class UserDrawStepTwoMapReduce {
                         userDraw.protraitAge(age1,age2,age3,age4,age5,times);
                     }
                 }
-
                 context.write(new Text(userDraw.getMdn() + "|" + userDraw.getMale() + "|" + userDraw.getFemale() + "|" + userDraw.getAge1()+ "|" + userDraw.getAge2()+ "|" + userDraw.getAge3()+ "|" + userDraw.getAge4()+ "|" + userDraw.getAge5()),NullWritable.get());
-
             }
         }
     }
+
 }

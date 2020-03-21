@@ -3,7 +3,7 @@ package com.bawei.userdraw.bean;
 import java.io.Serializable;
 
 public class UserDraw {
-    private String mdn;
+    private String mdn; //用户的唯一标识
     private double male;
     private double female;
     private double age1;

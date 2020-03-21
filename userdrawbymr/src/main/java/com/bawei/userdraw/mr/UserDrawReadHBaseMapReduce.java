@@ -17,7 +17,7 @@ import java.io.IOException;
 
 public class UserDrawReadHBaseMapReduce {
     public static class UserDrawReadHBaseMapper extends TableMapper<Text, NullWritable>{
-        @Override
+        @Override            //RowKey
         protected void map(ImmutableBytesWritable key, Result value, Context context) throws IOException, InterruptedException {
             StringBuffer sb = new StringBuffer(Bytes.toString(key.get(),key.getOffset(),key.getLength()) + "|");
             byte[] maleByte = value.getValue(Bytes.toBytes("f1"), Bytes.toBytes("male"));

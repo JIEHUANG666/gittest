@@ -14,7 +14,7 @@ public class UserDrawSaveHBaseMapReduce {
     public static class UserDrawSaveHBaseMapper extends Mapper<LongWritable, Text,Text, NullWritable>{
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            context.write(value,NullWritable.get());
+            context.write(value,NullWritable.get()); //只是读一下
         }
     }
 
@@ -32,7 +32,7 @@ public class UserDrawSaveHBaseMapReduce {
                 Double age4 = Double.valueOf(arr[6]);
                 Double age5 = Double.valueOf(arr[7]);
 
-                Put put = new Put(Bytes.toBytes(mdn));
+                Put put = new Put(Bytes.toBytes(mdn));  //  Bytes.toBytes    将字符编码设为UTF-8的格式
                 put.addColumn(Bytes.toBytes("f1"),Bytes.toBytes("male"),Bytes.toBytes(male));
                 put.addColumn(Bytes.toBytes("f1"),Bytes.toBytes("female"),Bytes.toBytes(female));
                 put.addColumn(Bytes.toBytes("f1"),Bytes.toBytes("age1"),Bytes.toBytes(age1));
